@@ -1,91 +1,71 @@
 "use client";
 
-import Link from "next/link";
-import { Box, ChevronLeft, FlaskConical, User } from "lucide-react";
-import { PRIMARY_NAVIGATION } from "@/constants/navigation";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { useUiStore } from "@/stores/ui-store";
+import { Box, Clock, FlaskConical, LayoutGrid, Zap, Settings, Menu } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
-export function AppSidebar() {
-  const collapsed = useUiStore((state) => state.sidebarCollapsed);
-  const toggleSidebar = useUiStore((state) => state.toggleSidebar);
-
+export function AppSidebar({ isCollapsed }: { isCollapsed?: boolean }) {
   return (
-    <aside
-      className={cn(
-        "hidden h-screen shrink-0 border-r bg-card/80 backdrop-blur lg:flex lg:flex-col",
-        collapsed ? "w-16" : "w-72",
-      )}
-    >
-      <div className="flex h-14 items-center gap-3 px-4">
-        <div className="flex size-9 items-center justify-center rounded-md bg-primary text-primary-foreground">
-          <Box className="size-5" />
-        </div>
-        {!collapsed && (
-          <div>
-            <p className="text-sm font-semibold">K8s Sandbox</p>
-            <p className="text-xs text-muted-foreground">Simulation engine</p>
-          </div>
-        )}
-        <Button
-          aria-label="Toggle sidebar"
-          className="ml-auto"
-          size="icon"
-          variant="ghost"
-          onClick={toggleSidebar}
-        >
-          <ChevronLeft className={cn("size-4", collapsed && "rotate-180")} />
+    <aside className="flex h-full w-full flex-col items-center py-4">
+      <div className={cn("mb-6 transition-all", isCollapsed ? "mb-4" : "mb-6")}>
+        <Button variant="ghost" size="icon" className="size-10 text-muted-foreground hover:bg-white/5 hover:text-white">
+          <Menu className="size-5" />
         </Button>
       </div>
-      <Separator />
-      <nav className="space-y-1 p-3">
-        {PRIMARY_NAVIGATION.map((item) => (
-          <Link
-            className="flex h-9 items-center gap-3 rounded-md px-3 text-sm text-muted-foreground hover:bg-secondary hover:text-foreground"
-            href={item.href}
-            key={item.href}
-          >
-            <item.icon className="size-4" />
-            {!collapsed && item.label}
-          </Link>
-        ))}
+
+      <nav className="flex flex-col gap-4">
+        <SidebarIcon icon={LayoutGrid} active label="Dashboard" isCollapsed={isCollapsed} />
+        <SidebarIcon icon={Box} label="Resources" isCollapsed={isCollapsed} />
+        <SidebarIcon icon={Clock} label="History" isCollapsed={isCollapsed} />
+        <SidebarIcon icon={Zap} label="Simulations" isCollapsed={isCollapsed} />
       </nav>
-      {!collapsed && (
-        <>
-          <Separator />
-          <section className="space-y-3 p-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xs font-semibold uppercase text-muted-foreground">
-                Saved playgrounds
-              </h2>
-            </div>
-            {["Nginx rollout", "API canary", "Crash loop lab"].map((name) => (
-              <button
-                className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm hover:bg-secondary"
-                key={name}
-              >
-                <FlaskConical className="size-4 text-muted-foreground" />
-                {name}
-              </button>
-            ))}
-          </section>
-          <section className="mt-auto border-t p-4">
-            <div className="flex items-center gap-3 rounded-md bg-secondary/70 p-3">
-              <div className="flex size-8 items-center justify-center rounded-full bg-background">
-                <User className="size-4" />
-              </div>
-              <div className="min-w-0">
-                <p className="truncate text-sm font-medium">Local user</p>
-                <p className="truncate text-xs text-muted-foreground">
-                  developer@example.com
-                </p>
-              </div>
-            </div>
-          </section>
-        </>
-      )}
+
+      <div className="mt-auto flex flex-col gap-4">
+        <div className="relative">
+          <SidebarIcon icon={Settings} label="Settings" isCollapsed={isCollapsed} />
+          {!isCollapsed && <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.5)]" />}
+        </div>
+        <div className="h-px w-8 bg-white/5 mx-auto" />
+        <button className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-[10px] font-bold text-white shadow-lg hover:opacity-90 transition-opacity">
+          JD
+        </button>
+      </div>
     </aside>
+  );
+}
+
+function SidebarIcon({ 
+  icon: Icon, 
+  active, 
+  label, 
+  isCollapsed 
+}: { 
+  icon: any; 
+  active?: boolean; 
+  label: string;
+  isCollapsed?: boolean;
+}) {
+  return (
+    <div className="group relative flex items-center justify-center">
+      <Button
+        variant="ghost"
+        size="icon"
+        className={cn(
+          "size-10 transition-all",
+          active 
+            ? "bg-indigo-500/10 text-indigo-400 shadow-[0_0_15px_rgba(99,102,241,0.15)]" 
+            : "text-white/40 hover:bg-white/5 hover:text-white"
+        )}
+      >
+        <Icon className="size-5" />
+      </Button>
+      {isCollapsed && (
+        <div className="absolute left-14 z-50 hidden group-hover:block">
+          <div className="rounded bg-black/90 px-2 py-1 text-[10px] font-bold text-white shadow-xl border border-white/10 whitespace-nowrap">
+            {label}
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
