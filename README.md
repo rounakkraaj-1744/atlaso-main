@@ -1,36 +1,87 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# K8s Sandbox
+
+K8s Sandbox is a browser-based Kubernetes infrastructure visualization and simulation platform. It parses Kubernetes YAML manifests, projects resources into a visual graph, and runs a local simulation engine for reconciliation, pod lifecycle transitions, service links, traffic flow, and event replay.
+
+This project intentionally does **not** connect to real Kubernetes clusters. There is no `kubectl`, no cluster provisioning, and no real infrastructure execution.
+
+## Stack
+
+- Next.js App Router, React, TypeScript strict mode
+- TailwindCSS v4, shadcn/ui-style primitives, next-themes
+- Monaco Editor for YAML input
+- React Flow for infrastructure visualization
+- Zustand for editor, simulation, auth, and UI stores
+- Supabase Auth and PostgreSQL-ready repository boundary
+- js-yaml and zod for parsing and validation
 
 ## Getting Started
 
-First, run the development server:
-
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+bun install
+cp .env.example .env.local
+bun run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open `http://localhost:3000/dashboard`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Supabase variables are optional for local starter development. When omitted, the login screen explains the fallback and the dashboard remains accessible for local simulation work.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Commands
 
-## Learn More
+```bash
+bun run dev
+bun run build
+bun run typecheck
+bun run lint
+bun run format
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Architecture
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+The repository uses feature-based and domain-oriented boundaries:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```text
+app/                  App Router routes, loading, error, route handlers
+components/           Shared layout and UI primitives
+config/               Environment validation
+constants/            App-wide constants, navigation, sample manifests
+features/             Product domains: auth, manifests, visualization, simulation
+hooks/                Shared React hooks
+lib/                  Framework integrations and shared library adapters
+providers/            App-level React providers
+services/             Persistence and external service boundaries
+simulation/           Local simulation engine, event bus, reconcilers, resources
+stores/               Zustand stores and slices
+types/                Shared TypeScript contracts
+utils/                Framework-agnostic utilities
+public/samples/       Starter Kubernetes manifest examples
+```
 
-## Deploy on Vercel
+## Current Starter Features
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- Live multi-document YAML parsing
+- Typed manifest conversion for Deployments, Pods, and Services
+- Deployment replica reconciliation
+- Pod scheduling and lifecycle transitions
+- Kill pod simulation and controller recreation
+- React Flow resource graph with animated service and scheduling edges
+- Event bus and timeline panel for replay-ready cluster events
+- Protected route middleware and Supabase auth setup
+- Vercel-ready Next.js configuration
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Database Boundary
+
+`services/playgrounds/playground-repository.ts` is currently an in-memory starter repository with the same shape expected from a Supabase-backed implementation. Replace the repository internals with Supabase table calls when the schema is introduced.
+
+Suggested `playgrounds` table:
+
+```sql
+create table playgrounds (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  title text not null,
+  manifest_yaml text not null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+```
